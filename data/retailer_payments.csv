@@ -1,0 +1,7 @@
+ref_no,payment_date,store_name,paid_amount,item_code,units_received,claim_description
+REF-1001,2024-01-15,D Mart,15000,RICE-5KG,100,
+REF-1002,2024-01-15,Big Bazaar,7560,OIL-1LTR,60,3 units received with leakage in packing
+REF-1003,2024-01-16,Reliance Fresh,20900,WHEAT-10KG,105,short received - 5 bags missing from delivery
+REF-1004,2024-01-17,D-Mart,4050,SUGAR-1KG,90,rate charged higher than agreed price in PO
+REF-1005,2024-01-18,Spencers,11000,TABLE-SALT,200,
+REF-1006,2024-01-19,Big Bazaar,17550,SUNFLOWER-OIL-5L,65,goods arrived in damaged condition - bottles broken
