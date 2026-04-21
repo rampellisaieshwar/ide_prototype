@@ -11,6 +11,7 @@ import io
 import numpy as np
 from datetime import datetime
 from rapidfuzz import fuzz
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 
@@ -70,7 +71,7 @@ def reconcile_chain(sap_record, warehouse_records, pod_records, grn_records):
     
     return results
 
-# ── CLAIM CLASSIFIER (Expanded for High Confidence) ──────────────────────────
+# ── CLAIM CLASSIFIER (Hybrid: Fuzzy + Naive Bayes) ──────────────────────────
 TRAINING_DATA = [
     # DAMAGE
     ("damaged items received", "DAMAGE"), ("goods arrived broken", "DAMAGE"), ("leaking on arrival", "DAMAGE"),
@@ -107,14 +108,30 @@ class ClaimClassifier:
     def __init__(self):
         self.pipeline = Pipeline([
             ("vect", TfidfVectorizer(ngram_range=(1, 2), lowercase=True)),
-            ("clf", MultinomialNB(alpha=0.1))
+            ("clf", MultinomialNB(alpha=0.01))
         ])
         self._train()
+        
     def _train(self):
         texts, labels = [item[0] for item in TRAINING_DATA], [item[1] for item in TRAINING_DATA]
         self.pipeline.fit(texts, labels)
+        
     def classify(self, text: str) -> dict:
         if not text or not text.strip(): return {"category": "NO_CLAIM", "confidence": 1.0, "review": False}
+        
+        # 1. Fuzzy Logic Bridge (High Confidence for known patterns)
+        best_match = None
+        best_score = 0
+        for train_text, label in TRAINING_DATA:
+            score = fuzz.ratio(text.lower(), train_text.lower())
+            if score > best_score:
+                best_score = score
+                best_match = label
+        
+        if best_score > 90:
+            return {"category": best_match, "confidence": round(best_score/100.0, 3), "review": False}
+            
+        # 2. AI Probabilistic Model (For unseen variations)
         proba = self.pipeline.predict_proba([text])[0]
         idx = int(np.argmax(proba))
         conf = round(float(proba[idx]), 3)
@@ -122,7 +139,6 @@ class ClaimClassifier:
 
 @st.cache_resource
 def get_classifier(data_len): 
-    # Force re-train if training data length changes
     return ClaimClassifier()
 
 # ── UI STYLING ────────────────────────────────────────────────────────────────
@@ -288,4 +304,4 @@ with tab3:
         st.info("👋 Use the sidebar to load the 4-stage evidence chain and begin the audit.")
 
 st.divider()
-st.caption("Engine v2.3 · High Confidence Auditor · Consolidated")
+st.caption("Engine v2.4 · Hybrid Intelligent Auditor · Consolidated")
