@@ -155,15 +155,14 @@ with tab2:
     c3.info("**3. Driver POD**\n\nProof of physical handover.")
     c4.info("**4. Retailer Document**\n\nFinal receipt and payment.")
 
-    st.mermaid("""
-    graph LR
-        A[SAP Invoice] --> B[Warehouse DCC]
-        B --> C[Driver POD]
-        C --> D[Retailer GRN]
-        D --> E{Engine Audit}
-        E -- No Delta --> F[CLEARED]
-        E -- Delta Found --> G[Leakage Detection]
-        G --> H[AI Category]
+    st.markdown("---")
+    st.subheader("System Lifecycle")
+    st.markdown("""
+    **Evidence Flow:**
+    `SAP Invoice` ➔ `Warehouse DCC` ➔ `Driver POD` ➔ `Retailer GRN`
+    
+    **Engine Flow:**
+    `Audit Chain` ➔ `Detect Delta` ➔ `AI Classification` ➔ `Resolution`
     """)
 
 # ── TAB 3: LIVE 4-STAGE PROTOTYPE ────────────────────────────────────────────
