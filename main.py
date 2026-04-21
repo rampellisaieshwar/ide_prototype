@@ -254,8 +254,8 @@ with tab3:
                         else:
                             st.success("Reconciliation Perfect")
 
-else:
-    st.info("👋 Use the sidebar to load the 4-stage evidence chain and begin the audit.")
+    else:
+        st.info("👋 Use the sidebar to load the 4-stage evidence chain and begin the audit.")
 
 st.divider()
 st.caption("Engine v2.0 · Full Chain Auditor · Consolidated")
