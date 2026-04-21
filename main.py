@@ -122,7 +122,9 @@ class ClaimClassifier:
         return {"category": self.pipeline.classes_[idx], "confidence": conf, "review": conf < 0.60}
 
 @st.cache_resource
-def get_classifier(): return ClaimClassifier()
+def get_classifier(data_len): 
+    # Force re-train if training data length changes
+    return ClaimClassifier()
 
 # ── UI STYLING ────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -192,7 +194,7 @@ with tab2:
 
 # ── TAB 3: LIVE 4-STAGE PROTOTYPE ────────────────────────────────────────────
 with tab3:
-    classifier = get_classifier()
+    classifier = get_classifier(len(TRAINING_DATA))
 
     # ── SAMPLE DATA GENERATION ────────────────────────────────────────────────
     SAMPLE_INVOICES = """invoice_id,sku,amount,quantity,date
@@ -237,7 +239,7 @@ with tab3:
             sap_df = pd.read_csv(sap_file) if sap_file else None
             wh_df = pd.read_csv(wh_file) if wh_file else None
             pod_df = pd.read_csv(pod_file) if pod_file else None
-            grn_df = pd.read_csv(grn_file) if grn_df else None
+            grn_df = pd.read_csv(grn_file) if grn_file else None
 
     # ── EXECUTION ─────────────────────────────────────────────────────────────
     if all(v is not None for v in [sap_df, wh_df, pod_df, grn_df]):
@@ -287,4 +289,4 @@ with tab3:
         st.info("👋 Use the sidebar to load the 4-stage evidence chain and begin the audit.")
 
 st.divider()
-st.caption("Engine v2.1 · High Confidence Auditor · Consolidated")
+st.caption("Engine v2.2 · High Confidence Auditor · Consolidated")
