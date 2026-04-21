@@ -3,9 +3,12 @@ Intelligent Discrepancy Engine — CLI Utility
 -------------------------------------------
 Run this as a command-line tool:
     python main.py
+Or as a streamlit app:
+    streamlit run main.py
 """
 
 import pandas as pd
+import streamlit as st
 from modules.matcher import find_best_match
 from modules.classifier import ClaimClassifier
 
@@ -74,12 +77,16 @@ def print_report(results):
 
 
 if __name__ == "__main__":
-    # Running as CLI
-    print("Initializing Engine...")
-    invoices, payments = load_data()
-    if not invoices:
-        exit(1)
-        
-    classifier = ClaimClassifier()
-    results = reconcile(invoices, payments, classifier)
-    print_report(results)
+    import streamlit as st
+    if st.runtime.exists():
+        import app
+    else:
+        # Running as CLI
+        print("Initializing Engine...")
+        invoices, payments = load_data()
+        if not invoices:
+            exit(1)
+            
+        classifier = ClaimClassifier()
+        results = reconcile(invoices, payments, classifier)
+        print_report(results)
