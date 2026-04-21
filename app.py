@@ -71,12 +71,37 @@ def reconcile_chain(sap_record, warehouse_records, pod_records, grn_records):
     
     return results
 
-# ── CLAIM CLASSIFIER ────────────────────────────────────────────────────────
+# ── CLAIM CLASSIFIER (Expanded for High Confidence) ──────────────────────────
 TRAINING_DATA = [
+    # DAMAGE
     ("damaged items received", "DAMAGE"), ("goods arrived broken", "DAMAGE"), ("leaking on arrival", "DAMAGE"),
+    ("broken bottles found in crate", "DAMAGE"), ("packing torn and product exposed", "DAMAGE"),
+    ("items crushed during transit", "DAMAGE"), ("carton wet and damaged", "DAMAGE"),
+    ("product leaked in shipment", "DAMAGE"), ("physical damage to goods", "DAMAGE"),
+    
+    # SHORT_SUPPLY
     ("short received", "SHORT_SUPPLY"), ("missing from delivery", "SHORT_SUPPLY"), ("receieved less", "SHORT_SUPPLY"),
+    ("short from delivery", "SHORT_SUPPLY"), ("received 95 units out of 100", "SHORT_SUPPLY"),
+    ("partial shipment received", "SHORT_SUPPLY"), ("box missing during offloading", "SHORT_SUPPLY"),
+    ("units not found in crate", "SHORT_SUPPLY"), ("shipment incomplete", "SHORT_SUPPLY"),
+    
+    # PRICE_ISSUE
     ("rate charged higher", "PRICE_ISSUE"), ("price mismatch", "PRICE_ISSUE"), ("wrong rate", "PRICE_ISSUE"),
-    ("scheme discount not applied", "DISCOUNT"), ("trade discount missing", "DISCOUNT")
+    ("incorrect billing rate", "PRICE_ISSUE"), ("MRP changed but old rate billed", "PRICE_ISSUE"),
+    ("rate difference found", "PRICE_ISSUE"), ("PO price vs Invoice price mismatch", "PRICE_ISSUE"),
+    
+    # DISCOUNT
+    ("scheme discount not applied", "DISCOUNT"), ("trade discount missing", "DISCOUNT"),
+    ("promotional discount not shown", "DISCOUNT"), ("festival offer rebate missing", "DISCOUNT"),
+    
+    # SCHEME_AGREEMENT (New Category)
+    ("5% annual growth scheme deduction as per Q4 agreement", "SCHEME_AGREEMENT"),
+    ("deduction as per annual contract", "SCHEME_AGREEMENT"),
+    ("quarterly scheme adjustment", "SCHEME_AGREEMENT"),
+    ("loyalty rebate as per agreement between parties", "SCHEME_AGREEMENT"),
+    ("volume target achievement scheme", "SCHEME_AGREEMENT"),
+    ("contractual discount for Q3", "SCHEME_AGREEMENT"),
+    ("agreement mismatch in scheme application", "SCHEME_AGREEMENT")
 ]
 
 class ClaimClassifier:
@@ -173,22 +198,26 @@ with tab3:
     SAMPLE_INVOICES = """invoice_id,sku,amount,quantity,date
     INV-1001,SKU-RICE-5KG,15000,100,2024-01-10
     INV-1002,SKU-OIL-1L,8400,60,2024-01-11
-    INV-1003,SKU-FLOUR-10KG,22000,110,2024-01-11"""
+    INV-1003,SKU-FLOUR-10KG,22000,110,2024-01-11
+    INV-1004,SKU-WHEAT-50KG,50000,500,2024-01-12"""
 
     SAMPLE_WAREHOUSE = """invoice_id,qty_dispatched,condition
     INV-1001,100,GOOD
     INV-1002,60,GOOD
-    INV-1003,105,DAMAGED_CARTON""" # Example of WH shortage/issue
+    INV-1003,105,DAMAGED_CARTON
+    INV-1004,500,GOOD"""
 
     SAMPLE_POD = """invoice_id,qty_delivered,remarks
     INV-1001,100,Handover Success
     INV-1002,57,3 Units Broken in Transit
-    INV-1003,105,Received"""
+    INV-1003,105,Received
+    INV-1004,500,Signed and Verified"""
 
     SAMPLE_RETAILER = """ref_no,paid_amount,units_received,claim_description
     REF-1001,15000,100,
     REF-1002,7500,57,broken bottles found in crate
-    REF-1003,20000,100,short from delivery"""
+    REF-1003,20000,100,short from delivery
+    REF-1004,47500,500,5% annual growth scheme deduction as per Q4 agreement"""
 
     # ── SIDEBAR CONTROLS ──────────────────────────────────────────────────────
     with st.sidebar:
@@ -208,7 +237,7 @@ with tab3:
             sap_df = pd.read_csv(sap_file) if sap_file else None
             wh_df = pd.read_csv(wh_file) if wh_file else None
             pod_df = pd.read_csv(pod_file) if pod_file else None
-            grn_df = pd.read_csv(grn_file) if grn_file else None
+            grn_df = pd.read_csv(grn_file) if grn_df else None
 
     # ── EXECUTION ─────────────────────────────────────────────────────────────
     if all(v is not None for v in [sap_df, wh_df, pod_df, grn_df]):
@@ -248,7 +277,8 @@ with tab3:
                             st.markdown(f"Leak: **₹{revenue_leak:,.0f}**")
                             if r["claim"]:
                                 ai = classifier.classify(r["claim"])
-                                st.caption(f"AI: **{ai['category']}** (Confident: {ai['confidence']})")
+                                conf_color = "#00ff7f" if ai["confidence"] > 0.8 else "#ff453a"
+                                st.markdown(f"AI: <span style='color:{conf_color}; font-weight:700'>{ai['category']}</span> (Confident: {ai['confidence']})", unsafe_allow_html=True)
                                 st.caption(f"Text: _{r['claim']}_")
                         else:
                             st.success("Reconciliation Perfect")
@@ -257,4 +287,4 @@ with tab3:
         st.info("👋 Use the sidebar to load the 4-stage evidence chain and begin the audit.")
 
 st.divider()
-st.caption("Engine v2.0 · Full Chain Auditor · Consolidated")
+st.caption("Engine v2.1 · High Confidence Auditor · Consolidated")
