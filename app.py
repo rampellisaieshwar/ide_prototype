@@ -8,8 +8,6 @@ Deployed:     https://ideprototype.streamlit.app
 import streamlit as st
 import pandas as pd
 import io
-from modules.matcher import find_best_match
-from modules.classifier import ClaimClassifier
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -18,6 +16,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+st.write("<!-- DEBUG: Page Config Done -->", unsafe_allow_html=True)
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -94,13 +94,15 @@ st.markdown(
 )
 st.divider()
 
-# ── Load classifier once ─────────────────────────────────────────────────────
+# ── Loading Modules & Classifier ─────────────────────────────────────────────
 @st.cache_resource
-def load_classifier():
-    return ClaimClassifier()
+def load_engine():
+    from modules.matcher import find_best_match
+    from modules.classifier import ClaimClassifier
+    return find_best_match, ClaimClassifier()
 
 try:
-    classifier = load_classifier()
+    find_best_match, classifier = load_engine()
 except Exception as e:
     st.error(f"Error loading AI model: {e}")
     st.stop()
