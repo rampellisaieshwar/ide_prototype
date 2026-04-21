@@ -16,6 +16,7 @@ Prototype scope:
 """
 
 import pandas as pd
+import streamlit as st
 from modules.matcher import find_best_match
 from modules.classifier import ClaimClassifier
 
@@ -144,14 +145,19 @@ def print_report(results):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print("\nLoading data...")
-    invoices, payments = load_data()
+    running_under_streamlit = st.runtime.exists()
 
-    print("Training claim classifier (TF-IDF + Logistic Regression)...")
-    classifier = ClaimClassifier()
-    print("Classifier ready.\n")
+    if running_under_streamlit:
+        import app  # noqa: F401
+    else:
+        print("\nLoading data...")
+        invoices, payments = load_data()
 
-    print("Running reconciliation pipeline...")
-    results = reconcile(invoices, payments, classifier)
+        print("Training claim classifier (TF-IDF + Logistic Regression)...")
+        classifier = ClaimClassifier()
+        print("Classifier ready.\n")
 
-    print_report(results)
+        print("Running reconciliation pipeline...")
+        results = reconcile(invoices, payments, classifier)
+
+        print_report(results)
