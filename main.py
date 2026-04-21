@@ -11,8 +11,7 @@ import io
 import numpy as np
 from datetime import datetime
 from rapidfuzz import fuzz
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 
 # ── Page config ──────────────────────────────────────────────────────────────
@@ -107,8 +106,8 @@ TRAINING_DATA = [
 class ClaimClassifier:
     def __init__(self):
         self.pipeline = Pipeline([
-            ("tfidf", TfidfVectorizer(ngram_range=(1, 2), lowercase=True)),
-            ("clf", LogisticRegression(max_iter=500))
+            ("vect", TfidfVectorizer(ngram_range=(1, 2), lowercase=True)),
+            ("clf", MultinomialNB(alpha=0.1))
         ])
         self._train()
     def _train(self):
@@ -289,4 +288,4 @@ with tab3:
         st.info("👋 Use the sidebar to load the 4-stage evidence chain and begin the audit.")
 
 st.divider()
-st.caption("Engine v2.2 · High Confidence Auditor · Consolidated")
+st.caption("Engine v2.3 · High Confidence Auditor · Consolidated")
